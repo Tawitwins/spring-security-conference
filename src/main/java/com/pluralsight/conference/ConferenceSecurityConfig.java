@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
 
 import javax.sql.DataSource;
 
@@ -18,6 +19,9 @@ public class ConferenceSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private UserDetailsContextMapper ctxMapper;
 
     @Override
     protected void configure(final HttpSecurity http) throws Exception{
@@ -46,7 +50,9 @@ public class ConferenceSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .passwordCompare()
                 .passwordEncoder(passwordEncoder())
-                .passwordAttribute("userPassword");
+                .passwordAttribute("userPassword")
+                .and()
+                .userDetailsContextMapper(ctxMapper);
     }
 
     @Bean
