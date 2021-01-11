@@ -10,6 +10,10 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.sql.DataSource;
 
@@ -32,11 +36,36 @@ public class ConferenceSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/assets/css/**", "assets/js/**", "/images/**").permitAll()
                 .antMatchers("/index*").permitAll()
                 .anyRequest().authenticated()
+
                 .and()
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/perform_login")
-                .defaultSuccessUrl("/",true);
+                .failureUrl("/login?error=true")
+                .permitAll()
+                .defaultSuccessUrl("/",true)
+
+                .and()
+                .rememberMe()
+                .key("superSecretKey")
+                .tokenRepository(tokenRepository())
+
+                .and()
+                .logout()
+                .logoutSuccessUrl("/login?logout=true")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/perform_logout", "GET"))
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll();
+                //.logoutUrl("logout") not used as there's the logoutRequestMatcher with get
+
+    }
+
+    @Bean
+    public PersistentTokenRepository tokenRepository(){
+        JdbcTokenRepositoryImpl token = new JdbcTokenRepositoryImpl();
+        token.setDataSource(dataSource);
+        return token;
     }
 
     @Override
